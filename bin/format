@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
+require 'format'
+
+case ARGV[0]
+when 'java' || 'sun'
+    indent = nil
+    case ARGV[1]
+    when 'tab'
+        indent = "\t"
+    when 'two_spaces'
+        indent = '  '
+    when 'three_spaces'
+        indent = '   '
+    when 'four_spaces'
+        indent = '    '
+    when 'eight_spaces'
+        indent = '        '
+    else
+        puts 'Assuming that you want four-space indentation...'
+        indent = '    '
+        ARGV.insert(1, nil)
+    end
+    ARGV.shift(2)
+    ARGV.each {|arg|
+        Format.format(arg, :style => Format.JAVA, :indentation => indent)
+    }
+when 'allman'
+    ARGV.shift
+    ARGV.each {|arg|
+        Format.format(arg, :style => Format.ALLMAN)
+    }
+when 'help'
+    puts "\nHelp Menu\n---------"
+    puts 'format command [options] files'
+    puts "\nCommands\n--------"
+    puts 'java / sun => brackets on separate line'
+    puts 'allman     => brackets on same line'
+    puts 'help       => this menu'
+    puts "\nOptions (for 'java' / 'sun')\n----------------------------"
+    puts 'two_spaces            => two space indentation'
+    puts 'three_spaces          => three space indentation'
+    puts 'four_spaces (default) => four space indentation'
+    puts 'eight_spaces          => eight space indentation'
+    puts "tab                   => tab indentation\n\n"
+else
+    puts 'Invalid command.  You may want to view the help menu (format help)'
+end
