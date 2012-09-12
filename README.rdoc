@@ -1,6 +1,6 @@
 = format
 
-Description goes here.
+A formatter for several popular indentation/bracketing styles.
 
 == Contributing to format
  
