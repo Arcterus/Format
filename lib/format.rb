@@ -59,8 +59,9 @@ class Format
     #                        indentation
     #
     def self.allman(file, output, indent)
+        typedef = false
         IO.readlines(file).each {|line|
-            indentlevel = self.get_leading_space(line).scan(/#{indent}/).size
+            indentlevel = self.get_leading_space(line).scan(/#{Regexp.quote(indent)}/).size
             if line =~ /^[[:blank:]]*}.*$/ then
                 indentlevel.times do
                     output.print(indent)
@@ -70,7 +71,7 @@ class Format
                 next if line.lstrip == ''
             end
             if line =~ /[[:graph:]][[:blank:]]*{[[:blank:]]*$/ then
-                output.puts("#{line.rstrip.chop.rstrip}")
+                output.puts(line.rstrip.chop.rstrip)
                 indentlevel.times do
                     output.print(indent)
                 end
@@ -91,6 +92,23 @@ class Format
     #                        indentation
     #
     def self.unix(file, output, indent)
+        java_output = File.new(file + '.unix.tmp', 'w+')
+        self.java(file, java_output, indent)
+        java_output.seek(0, IO::SEEK_SET)
+        IO.readlines(java_output).each {|line|
+            indentlevel = self.get_leading_space(line).scan(/#{Regexp.quote(indent)}/).size
+            if line =~ /^[[:blank:]]*[[:alpha:]][[:alnum:]]*[[:blank:]]+.*\(.*\)[[:blank:]]*\{[[:blank:]]*$/ then
+                output.puts(line.rstrip.chop.rstrip)
+                indentlevel.times do
+                    output.print(indent)
+                end
+                output.puts('{')
+            else
+                output.puts(line)
+            end
+        }
+        java_output.close
+        File.delete(file + '.unix.tmp')
     end
 
     #
@@ -133,6 +151,10 @@ class Format
         output.puts(prev_line) if prev_line != 'IGNORE THIS LINE'
     end
 
+    def self.whitesmith(file, output, indent)
+
+    end
+
     public
 
     #
@@ -170,6 +192,10 @@ class Format
     #
     def self.SUN
         self.JAVA
+    end
+
+    def self.WHITESMITH
+        4
     end
 
     #

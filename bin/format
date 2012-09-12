@@ -4,9 +4,8 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'format'
 
-case ARGV[0]
-when 'java' || 'sun'
-    indent = nil
+indent = nil
+if ARGV[0] == 'java' || ARGV[0] == 'sun' || ARGV[0] == 'unix' then
     case ARGV[1]
     when 'tab'
         indent = "\t"
@@ -23,15 +22,26 @@ when 'java' || 'sun'
         indent = '    '
         ARGV.insert(1, nil)
     end
-    ARGV.shift(2)
+    ARGV.delete_at(1)
+end
+case ARGV[0]
+when 'java' || 'sun'
+    ARGV.shift
     ARGV.each {|arg|
         Format.format(arg, :style => Format.JAVA, :indentation => indent)
+    }
+when 'unix'
+    ARGV.shift
+    ARGV.each {|arg|
+        Format.format(arg, :style => Format.UNIX, :indentation => indent)
     }
 when 'allman'
     ARGV.shift
     ARGV.each {|arg|
         Format.format(arg, :style => Format.ALLMAN)
     }
+when 'unix'
+
 when 'help'
     puts "\nHelp Menu\n---------"
     puts 'format command [options] files'
