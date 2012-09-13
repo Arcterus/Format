@@ -241,6 +241,11 @@ class Format
             output = File.new(file + '.sun', 'w+')
             self.java(file, output, indent)
         end
+        filename = output.path
         output.close
+        if options[:replace] then
+            File.delete(file)
+            File.rename(filename, file)
+        end
     end
 end

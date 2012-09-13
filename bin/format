@@ -4,57 +4,68 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 
 require 'format'
 
-indent = nil
-if ARGV[0] == 'java' || ARGV[0] == 'sun' || ARGV[0] == 'unix' then
-    case ARGV[1]
-    when 'tab'
-        indent = "\t"
-    when 'two_spaces'
-        indent = '  '
-    when 'three_spaces'
-        indent = '   '
-    when 'four_spaces'
-        indent = '    '
-    when 'eight_spaces'
-        indent = '        '
-    else
-        puts 'Assuming that you want four-space indentation...'
-        indent = '    '
-        ARGV.insert(1, nil)
-    end
-    ARGV.delete_at(1)
-end
-case ARGV[0]
-when 'java' || 'sun'
-    ARGV.shift
-    ARGV.each {|arg|
-        Format.format(arg, :style => Format.JAVA, :indentation => indent)
-    }
-when 'unix'
-    ARGV.shift
-    ARGV.each {|arg|
-        Format.format(arg, :style => Format.UNIX, :indentation => indent)
-    }
-when 'allman'
-    ARGV.shift
-    ARGV.each {|arg|
-        Format.format(arg, :style => Format.ALLMAN)
-    }
-when 'unix'
-
-when 'help'
+def help
     puts "\nHelp Menu\n---------"
     puts 'format command [options] files'
     puts "\nCommands\n--------"
     puts 'java / sun => brackets on separate line'
     puts 'allman     => brackets on same line'
+    puts 'unix       => brackets on same line for functions, separate line for everything else'
     puts 'help       => this menu'
-    puts "\nOptions (for 'java' / 'sun')\n----------------------------"
-    puts 'two_spaces            => two space indentation'
-    puts 'three_spaces          => three space indentation'
-    puts 'four_spaces (default) => four space indentation'
-    puts 'eight_spaces          => eight space indentation'
-    puts "tab                   => tab indentation\n\n"
-else
+    puts "\nOptions (for 'unix' / 'allman')\n-------------------------------"
+    puts "--indent => indentation used by the input file(s) (default = 4)\n\n"
+end
+
+if ARGV.length == 1 and ARGV[0] == 'help' then
+    help
+    exit
+elsif ARGV.length < 2 then
     puts 'Invalid command.  You may want to view the help menu (format help)'
+    exit 1
+end
+
+commands = ['java', 'sun', 'help', 'unix', 'allman']
+found = false
+commands.each {|cmd|
+    if ARGV[0] == cmd then
+        found = true
+        break
+    end
+}
+if not found then
+    puts 'Invalid command.  You may want to view the help menu (format help)'
+    exit 1
+end
+
+options = {}
+
+while ARGV.length != 1 do
+    case ARGV[1]
+    when '--indent', '-i'
+        options[:indentation] = ARGV[2].gsub(/\\t/, "\t")
+        ARGV.delete_at(1)
+    when '--replace', '-r'
+        options[:replace] = true
+    else
+        break
+    end
+    ARGV.delete_at(1)
+end
+
+case ARGV[0]
+when 'java', 'sun'
+    ARGV.shift
+    ARGV.each {|arg|
+        Format.format(arg, options.merge({:style => Format.JAVA}))
+    }
+when 'unix'
+    ARGV.shift
+    ARGV.each {|arg|
+        Format.format(arg, options.merge({:style => Format.UNIX}))
+    }
+when 'allman'
+    ARGV.shift
+    ARGV.each {|arg|
+        Format.format(arg, options.merge({:style => Format.ALLMAN}))
+    }
 end
