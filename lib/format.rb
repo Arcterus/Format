@@ -57,11 +57,12 @@ class Format
     # @param [File] output the output file
     # @param [String] indent the string to be used for
     #                        indentation
+    # @param [Hash] options optional parameters that
+    #                       affect output
     #
-    def self.allman(file, output, indent)
-        typedef = false
+    def self.allman(file, output, indent, options={})
         IO.readlines(file).each {|line|
-            indentlevel = self.get_leading_space(line).scan(/#{Regexp.quote(indent)}/).size
+            indentlevel = self.get_leading_space(line).scan(/#{Regexp.quote(indent)}/).size + (options[:whitesmith] == true ? 1 : 0)
             if line =~ /^[[:blank:]]*}.*$/ then
                 indentlevel.times do
                     output.print(indent)
@@ -124,12 +125,19 @@ class Format
         prev_line = 'IGNORE THIS LINE'
         data = IO.readlines(file)
         index = 0
+        indent_level = ''
         data.each {|line|
             if line =~ /^[[:blank:]]*{[[:blank:]]*$/ and
-               !(prev_line =~ /^[[:blank:]]*}[[:blank:]]*$/) then
+               not prev_line =~ /^[[:blank:]]*}[[:blank:]]*$/ then
                 prev_line = prev_line.rstrip + ' {'
                 line = 'IGNORE THIS LINE'
             else
+                if prev_line =~ /^[[:blank:]]*}[[:blank:]]*$/ then
+                    prev_line.lstrip!
+                    indent_level.times do
+                        output.print(indent)
+                    end
+                end
                 @@keywords.each {|key|
                     if line =~ /^[[:blank:]]*#{Regexp.quote(key)}([[:blank:]]|\()?.*$/ and
                        prev_line =~ /^[[:blank:]]*}[[:blank:]]*$/ then
@@ -144,15 +152,27 @@ class Format
                     end
                 }
             end
-            output.puts(prev_line) if prev_line != 'IGNORE THIS LINE'
+            if prev_line != 'IGNORE THIS LINE' then
+                output.puts(prev_line)
+                indent_level = self.get_leading_space(prev_line).scan(/#{Regexp.quote(indent)}/).size
+                indent_level -= 1 if indent_level != 0
+            end
             prev_line = line
             index += 1
         }
-        output.puts(prev_line) if prev_line != 'IGNORE THIS LINE'
+        if prev_line != 'IGNORE THIS LINE' then
+            if prev_line =~ /^[[:blank:]]*}[[:blank:]]*$/ then
+                prev_line.lstrip!
+                indent_level.times do
+                    output.print(indent)
+                end
+            end
+            output.puts(prev_line)
+        end
     end
 
     def self.whitesmith(file, output, indent)
-
+        self.allman(file, output, indent, :whitesmith => true)
     end
 
     public
@@ -194,6 +214,11 @@ class Format
         self.JAVA
     end
 
+    #
+    # Whitesmith bracketing style
+    #
+    # @return [Integer] the number designating the
+    #                   Whitesmith bracketing style
     def self.WHITESMITH
         4
     end
@@ -230,6 +255,9 @@ class Format
         when self.ALLMAN
             output = File.new(file + '.allman', 'w+')
             self.allman(file, output, indent)
+        when self.WHITESMITH
+            output = File.new(file + '.whitesmith', 'w+')
+            self.whitesmith(file, output, indent)
         when self.UNIX
             output = File.new(file + '.unix', 'w+')
             self.unix(file, output, indent)

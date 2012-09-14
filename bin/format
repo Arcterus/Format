@@ -8,23 +8,33 @@ def help
     puts "\nHelp Menu\n---------"
     puts 'format command [options] files'
     puts "\nCommands\n--------"
-    puts 'java / sun => brackets on separate line'
+    puts 'java, sun  => brackets on separate line'
     puts 'allman     => brackets on same line'
     puts 'unix       => brackets on same line for functions, separate line for everything else'
+    puts 'whitesmith => brackets on separate line and indented one level extra'
+    puts 'version    => print out the current version of format'
     puts 'help       => this menu'
-    puts "\nOptions (for 'unix' / 'allman')\n-------------------------------"
-    puts "--indent => indentation used by the input file(s) (default = 4)\n\n"
+    puts "\nOptions\n-------"
+    puts '--replace, -r => replace original files with formatted ones'
+    puts "\nOptions (for 'unix', 'allman', 'whitesmith')\n--------------------------------------------"
+    puts "--indent, -i => indentation used by the input file(s) (default = 4)\n\n"
 end
 
-if ARGV.length == 1 and ARGV[0] == 'help' then
-    help
-    exit
+if ARGV.length == 1 then
+    case ARGV[0]
+    when 'help'
+        help
+        exit
+    when 'version'
+        puts Format.VERSION
+        exit
+    end
 elsif ARGV.length < 2 then
     puts 'Invalid command.  You may want to view the help menu (format help)'
     exit 1
 end
 
-commands = ['java', 'sun', 'help', 'unix', 'allman']
+commands = ['java', 'sun', 'unix', 'allman', 'whitesmith']
 found = false
 commands.each {|cmd|
     if ARGV[0] == cmd then
@@ -67,5 +77,10 @@ when 'allman'
     ARGV.shift
     ARGV.each {|arg|
         Format.format(arg, options.merge({:style => Format.ALLMAN}))
+    }
+when 'whitesmith'
+    ARGV.shift
+    ARGV.each {|arg|
+        Format.format(arg, options.merge({:style => Format.WHITESMITH}))
     }
 end
